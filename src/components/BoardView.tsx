@@ -7,11 +7,9 @@ import { AutoTextarea, EmptyHint, Field, padEp } from './ui'
 export function BoardView({
   project,
   onChange,
-  online,
 }: {
   project: Project
   onChange: (project: Project) => void
-  online: boolean
 }) {
   const [selectedId, setSelectedId] = useState(project.episodes[0]?.id ?? '')
   const [busy, setBusy] = useState(false)
@@ -120,8 +118,7 @@ export function BoardView({
             </button>
           </header>
           <p className="lead">
-            每个场景对应一条 5–10 秒的 H3 镜头包，提示词里带时间轴、角色锁定、对白口型和声画。后面你把这些提示词丢进自己的 H3 工作流即可。
-            {online ? ' 剧目会同步到后端。' : ' 后端未连接，提示词仍可在本机生成。'}
+            每个场景对应一条 5–10 秒的 H3 镜头包，提示词里带时间轴、角色锁定、对白口型和声画。后面你把这些提示词丢进自己的 H3 工作流即可。剧目写入项目目录 data/tvscript.db。
           </p>
           {error ? <p className="board-error">{error}</p> : null}
 

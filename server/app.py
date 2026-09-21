@@ -22,9 +22,21 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/api/workspace")
+def read_workspace() -> dict[str, Any]:
+    return db.workspace()
+
+
+@app.put("/api/workspace/active")
+def save_active(payload: dict[str, Any]) -> dict[str, Any]:
+    active_id = payload.get("activeId")
+    db.set_meta("activeId", str(active_id) if active_id else None)
+    return db.workspace()
+
+
 @app.get("/api/projects")
 def list_projects() -> dict[str, Any]:
-    return {"projects": db.list_projects()}
+    return db.workspace()
 
 
 @app.get("/api/projects/{project_id}")

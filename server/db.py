@@ -23,6 +23,14 @@ def connect() -> sqlite3.Connection:
         )
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS meta (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+        """
+    )
     conn.commit()
     return conn
 
@@ -67,3 +75,38 @@ def delete_project(project_id: str) -> None:
     with connect() as conn:
         conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
         conn.commit()
+    active_id = get_meta("activeId")
+    if active_id == project_id:
+        remaining = list_projects()
+        set_meta("activeId", remaining[0]["id"] if remaining else None)
+
+
+def get_meta(key: str) -> str | None:
+    with connect() as conn:
+        row = conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+    return str(row["value"]) if row else None
+
+
+def set_meta(key: str, value: str | None) -> None:
+    with connect() as conn:
+        if value is None or value == "":
+            conn.execute("DELETE FROM meta WHERE key = ?", (key,))
+        else:
+            conn.execute(
+                """
+                INSERT INTO meta (key, value) VALUES (?, ?)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                """,
+                (key, value),
+            )
+        conn.commit()
+
+
+def workspace() -> dict[str, Any]:
+    projects = list_projects()
+    active_id = get_meta("activeId")
+    if active_id and not any(project.get("id") == active_id for project in projects):
+        active_id = None
+    if not active_id and projects:
+        active_id = projects[0].get("id")
+    return {"projects": projects, "activeId": active_id}

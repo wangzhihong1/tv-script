@@ -26,7 +26,9 @@ export default function App() {
     createWorldEnd,
     removeProject,
     duplicateProject,
-    online,
+    status,
+    error,
+    retry,
   } = useWorkspace()
   const [view, setView] = useState<View>('story')
   const [creating, setCreating] = useState(false)
@@ -49,19 +51,32 @@ export default function App() {
           <span className="mark">TV</span>
           <div>
             <strong>TvScript</strong>
-            <em>短剧工坊{online ? '' : ' · 离线'}</em>
+            <em>
+              {status === 'ready'
+                ? '短剧工坊'
+                : status === 'loading'
+                  ? '正在读取数据库'
+                  : '后端未连接'}
+            </em>
           </div>
         </div>
         <button
           type="button"
           className="btn gold wide"
+          disabled={status !== 'ready'}
           onClick={() => setCreating(true)}
         >
           新建剧目
         </button>
         <div className="project-list">
           {projects.length === 0 ? (
-            <p className="quiet pad">还没有剧目。先写故事，或载入《世界末日》。</p>
+            <p className="quiet pad">
+              {status === 'loading'
+                ? '正在读取项目数据库…'
+                : status === 'error'
+                  ? '连不上数据库，先启动后端。'
+                  : '还没有剧目。先写故事，或载入《世界末日》。'}
+            </p>
           ) : (
             projects.map((project) => (
               <button
@@ -122,7 +137,24 @@ export default function App() {
           ) : null}
         </header>
 
-        {active ? (
+        {status === 'loading' ? (
+          <main className="welcome">
+            <p className="eyebrow">项目数据库</p>
+            <h1>正在读取剧目</h1>
+            <p>稿件只存在本项目的 data/tvscript.db，不会写入浏览器。</p>
+          </main>
+        ) : status === 'error' ? (
+          <main className="welcome">
+            <p className="eyebrow">无法落盘</p>
+            <h1>后端还没连上</h1>
+            <p>{error}</p>
+            <div className="welcome-actions">
+              <button type="button" className="btn gold" onClick={() => void retry()}>
+                重新连接
+              </button>
+            </div>
+          </main>
+        ) : active ? (
           <>
             <nav className="tabs">
               {VIEWS.map((item) => (
@@ -154,7 +186,7 @@ export default function App() {
                 <CheckView project={active} onGoto={setView} />
               ) : null}
               {view === 'board' ? (
-                <BoardView project={active} onChange={apply} online={online} />
+                <BoardView project={active} onChange={apply} />
               ) : null}
               {view === 'export' ? <ExportView project={active} /> : null}
             </main>
@@ -169,7 +201,7 @@ export default function App() {
             </h1>
             <p>
               以《世界末日》为例：先立故事和人物，再写成场次对白，最后拆成 MiniMax H3 提示词。
-              成片工作流后面再接。剧本存在本机；连上 Python 后端后会一起落盘。
+              成片工作流后面再接。剧目只存在本项目的 data/tvscript.db，换电脑拉仓库就能接着写。
             </p>
             <div className="welcome-actions">
               <button type="button" className="btn gold" onClick={() => {

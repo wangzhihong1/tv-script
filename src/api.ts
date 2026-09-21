@@ -32,23 +32,30 @@ export async function pingHealth(): Promise<boolean> {
   }
 }
 
-export async function fetchWorkspace(): Promise<Workspace | null> {
-  try {
-    const result = await request<{ projects: Project[] }>('/projects')
-    if (!Array.isArray(result.projects)) return null
-    return {
-      projects: result.projects,
-      activeId: result.projects[0]?.id ?? null,
-    }
-  } catch {
-    return null
-  }
+function asWorkspace(result: { projects?: Project[]; activeId?: string | null }): Workspace {
+  const projects = Array.isArray(result.projects) ? result.projects : []
+  const activeId =
+    result.activeId && projects.some((project) => project.id === result.activeId)
+      ? result.activeId
+      : (projects[0]?.id ?? null)
+  return { projects, activeId }
+}
+
+export async function fetchWorkspace(): Promise<Workspace> {
+  return asWorkspace(await request<{ projects: Project[]; activeId?: string | null }>('/workspace'))
 }
 
 export async function saveProject(project: Project): Promise<void> {
   await request(`/projects/${project.id}`, {
     method: 'PUT',
     body: JSON.stringify(project),
+  })
+}
+
+export async function saveActiveId(activeId: string | null): Promise<void> {
+  await request('/workspace/active', {
+    method: 'PUT',
+    body: JSON.stringify({ activeId }),
   })
 }
 
