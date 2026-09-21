@@ -27,5 +27,9 @@ dist-ssr
 venv
 __pycache__
 *.pyc
-data/
 .env
+
+# SQLite 运行时旁路文件；主库 data/tvscript.db 要进仓库，方便换电脑
+data/*.db-wal
+data/*.db-shm
+data/*.db-journal
