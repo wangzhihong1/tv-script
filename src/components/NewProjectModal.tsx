@@ -1,13 +1,15 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
-import type { Audience, Project } from '../types'
-import { AUDIENCE_LABELS, GENRES } from '../types'
+import type { Audience, EndingType, Project, Tone } from '../types'
+import { AUDIENCE_LABELS, ENDING_LABELS, GENRES, TONE_LABELS } from '../types'
 import { AutoTextarea, Field, Modal } from './ui'
 
 const EMPTY_FORM = {
   title: '',
   genre: '霸总逆袭',
   audience: 'female' as Audience,
+  tone: 'sweet_hurt' as Tone,
+  endingType: 'he' as EndingType,
   targetEpisodes: 80,
   logline: '',
 }
@@ -15,12 +17,10 @@ const EMPTY_FORM = {
 export function NewProjectModal({
   onClose,
   onCreate,
-  onSample,
   onWorldEnd,
 }: {
   onClose: () => void
   onCreate: (partial: Partial<Project>) => void
-  onSample: () => void
   onWorldEnd: () => void
 }) {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -31,6 +31,8 @@ export function NewProjectModal({
       title: form.title.trim() || '未命名短剧',
       genre: form.genre,
       audience: form.audience,
+      tone: form.tone,
+      endingType: form.endingType,
       targetEpisodes: Math.max(1, Number(form.targetEpisodes) || 80),
       logline: form.logline.trim(),
     })
@@ -42,11 +44,8 @@ export function NewProjectModal({
       onClose={onClose}
       footer={
         <>
-          <button type="button" className="btn ghost" onClick={onSample}>
-            载入示例《被弃千金》
-          </button>
           <button type="button" className="btn ghost" onClick={onWorldEnd}>
-            创建《世界末日》
+            载入《世界末日》
           </button>
           <button type="submit" form="new-project-form" className="btn gold">
             创建空白剧目
@@ -59,7 +58,7 @@ export function NewProjectModal({
           <input
             autoFocus
             value={form.title}
-            placeholder="例如：被弃千金"
+            placeholder="例如：世界末日"
             onChange={(event) => setForm({ ...form, title: event.target.value })}
           />
         </Field>
@@ -90,6 +89,32 @@ export function NewProjectModal({
               ))}
             </select>
           </Field>
+          <Field label="调性">
+            <select
+              value={form.tone}
+              onChange={(event) => setForm({ ...form, tone: event.target.value as Tone })}
+            >
+              {Object.entries(TONE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="结局">
+            <select
+              value={form.endingType}
+              onChange={(event) =>
+                setForm({ ...form, endingType: event.target.value as EndingType })
+              }
+            >
+              {Object.entries(ENDING_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
         <Field label="目标集数" hint="常见 60–80 集">
           <input
@@ -105,7 +130,7 @@ export function NewProjectModal({
         <Field label="一句话卖点" hint="身份反差 + 核心冲突">
           <AutoTextarea
             rows={3}
-            placeholder="被全家抛弃的灰姑娘，其实是消失十年的财阀千金。"
+            placeholder="末日倒计时开始那天，被悔婚的女人发现：全人类的方舟，只认她的血。"
             value={form.logline}
             onChange={(event) => setForm({ ...form, logline: event.target.value })}
           />

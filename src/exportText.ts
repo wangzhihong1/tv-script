@@ -1,5 +1,5 @@
-import type { Episode, Project, Scene } from './types'
-import { AUDIENCE_LABELS, ROLE_LABELS } from './types'
+import type { Episode, H3Clip, Project, Scene } from './types'
+import { AUDIENCE_LABELS, HOOK_LABELS, MARKER_LABELS, ROLE_LABELS, TONE_LABELS, ENDING_LABELS, VILLAIN_LAYER_LABELS } from './types'
 import { episodeHasScript } from './model'
 
 function pad(number: number): string {
@@ -28,8 +28,12 @@ function sceneToFountain(scene: Scene): string {
 }
 
 function episodeOutline(episode: Episode): string {
+  const tags = [
+    episode.hookType ? HOOK_LABELS[episode.hookType] : '',
+    episode.marker !== 'normal' ? MARKER_LABELS[episode.marker] : '',
+  ].filter(Boolean)
   return [
-    `第${pad(episode.number)}集  ${episode.title || '未命名'}`,
+    `第${pad(episode.number)}集  ${episode.title || '未命名'}${tags.length ? `  【${tags.join(' · ')}】` : ''}`,
     episode.hookTitle ? `【集标题钩子】${episode.hookTitle}` : '',
     `开场：${episode.opening || '（空）'}`,
     `中段：${episode.middle || '（空）'}`,
@@ -72,11 +76,33 @@ function episodeScript(episode: Episode): string {
   return [header, body, hook].filter(Boolean).join('\n\n')
 }
 
+function clipPrompt(clip: H3Clip): string {
+  return [
+    `镜头${clip.number}  ${clip.heading || '未命名'}  ${clip.duration}s`,
+    clip.prompt || '（空提示词）',
+  ].join('\n')
+}
+
+function episodeClips(episode: Episode): string {
+  const header = `第${pad(episode.number)}集  ${episode.title || '未命名'}`
+  if (episode.clips.length === 0) {
+    return `${header}\n（本集尚未生成 H3 提示词）`
+  }
+  return [header, ...episode.clips.map(clipPrompt)].join('\n\n')
+}
+
 export function exportPlainText(project: Project): string {
   const meta = [
     `《${project.title}》`,
-    `类型：${project.genre}　受众：${AUDIENCE_LABELS[project.audience]}　目标集数：${project.targetEpisodes}`,
+    `类型：${project.genre}　受众：${AUDIENCE_LABELS[project.audience]}　调性：${TONE_LABELS[project.tone]}　结局：${ENDING_LABELS[project.endingType]}　目标集数：${project.targetEpisodes}`,
     `一句话卖点：${project.logline || '（未填写）'}`,
+  ].join('\n')
+
+  const story = [
+    '===== 故事 =====',
+    project.world ? `【这个世界】\n${project.world}` : '【这个世界】（未填写）',
+    '',
+    project.story || '（尚未写故事正文）',
   ].join('\n')
 
   const people =
@@ -86,6 +112,7 @@ export function exportPlainText(project: Project): string {
           .map((person) =>
             [
               `【${ROLE_LABELS[person.role]}】${person.name || '未命名'}`,
+              person.villainLayer !== 'none' ? `反派层级：${VILLAIN_LAYER_LABELS[person.villainLayer]}` : '',
               person.tag ? `标签：${person.tag}` : '',
               person.secret ? `秘密：${person.secret}` : '',
               person.relationship ? `关系：${person.relationship}` : '',
@@ -106,16 +133,37 @@ export function exportPlainText(project: Project): string {
       ? '（暂无剧本）'
       : project.episodes.map(episodeScript).join('\n\n----------\n\n')
 
+  const prompts =
+    project.episodes.length === 0
+      ? '（暂无提示词）'
+      : project.episodes.map(episodeClips).join('\n\n----------\n\n')
+
   return [
     meta,
+    story,
     '===== 人物 =====',
     people,
     '===== 分集大纲 =====',
     outline,
     '===== 剧本 =====',
     scripts,
+    '===== MiniMax H3 提示词 =====',
+    prompts,
     '',
   ].join('\n\n')
+}
+
+export function exportH3Prompts(project: Project): string {
+  const header = [
+    `《${project.title}》 MiniMax H3 提示词`,
+    `类型：${project.genre}　调性：${TONE_LABELS[project.tone]}`,
+    '',
+  ].join('\n')
+  const body =
+    project.episodes.length === 0
+      ? '（暂无提示词）'
+      : project.episodes.map(episodeClips).join('\n\n----------\n\n')
+  return `${header}\n${body}\n`
 }
 
 export function exportFountain(project: Project): string {

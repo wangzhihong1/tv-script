@@ -154,7 +154,7 @@ export function ScriptView({
                   </div>
                   <AutoTextarea
                     className="action"
-                    placeholder="（动作）顾琛当众把戒指扔进香槟塔。"
+                    placeholder="（动作）顾寒当众把戒指扔进高脚杯。"
                     value={scene.action}
                     onChange={(event) =>
                       patchScene(selected.id, scene.id, { action: event.target.value })

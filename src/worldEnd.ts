@@ -1,5 +1,6 @@
-import type { Project } from './types'
+import type { EpisodeMarker, HookType, Project } from './types'
 import { createCharacter, createDialogue, createEpisode, createProject, createScene } from './model'
+import { attachStoryboard } from './storyboard'
 
 type Beat = {
   title: string
@@ -9,6 +10,32 @@ type Beat = {
   endingHook: string
   nextPreview: string
   notes?: string
+}
+
+function worldEndCraft(index: number): { hookType: HookType; marker: EpisodeMarker } {
+  const n = index + 1
+  const front: HookType[] = [
+    'crisis',
+    'info',
+    'reversal',
+    'crisis',
+    'emotion',
+    'reversal',
+    'crisis',
+    'suspense',
+    'crisis',
+    'info',
+  ]
+  const cycle: HookType[] = ['emotion', 'suspense', 'info', 'crisis', 'reversal']
+  const hookType = n <= 10 ? front[n - 1] : cycle[(index - 10) % cycle.length]
+  if (n <= 10) {
+    if (n === 4 || n === 7) return { hookType, marker: 'paywall' }
+    if (n === 1 || n === 3 || n === 6 || n === 9) return { hookType, marker: 'key' }
+    return { hookType, marker: 'normal' }
+  }
+  if (n % 7 === 0) return { hookType, marker: 'paywall' }
+  if (n % 3 === 0) return { hookType, marker: 'key' }
+  return { hookType, marker: 'normal' }
 }
 
 const BEATS: Beat[] = [
@@ -655,6 +682,50 @@ const BEATS: Beat[] = [
   },
 ]
 
+export const WORLD_END_LOGLINE =
+  '末日倒计时开始那天，被悔婚的女人发现：全人类的方舟，只认她的血。'
+
+export const WORLD_END_WORLD = `陨石改道，撞向地球。顾氏以「拯救人类」为名建造全球方舟，船票按血统、贡献和配额发放。没有船票的人，被写成可抛弃。
+
+方舟真正的动力不是燃料，是十年前的星核实验：把活人注射进星核，门、闸门、反应堆只认密钥的血和心跳。密钥可以被摘心，也可以被克隆。
+
+顾振山十年前动过陨石轨道。末日不是天灾，是清洗。`
+
+export const WORLD_END_STORY = `订婚宴那天，天先裂开。
+
+顾寒把戒指扔进高脚杯：婚礼取消。末日来了，方舟没有黎霜的位置。能源部千金宋织走上红毯，金船票对着镜头——顾太太从一开始就写着她的名字。黎霜被保安推下台阶。雨和陨石火光混在一起时，她手腕上十年前的伤疤亮成一条细线，脚下防空洞的门自己打开。顾寒把掌纹按上去，锁是红的。这扇门不认顾氏，只认她的血。
+
+舱壁上全是失踪实验体的编号。主屏幕刷绿：星核匹配百分之一百，持有人黎霜。宋织下令活捉密钥，必要时摘心。金船票背面印着她十年前的实验编号。顾振山下达密令：天亮前回收，取出活体心脏。
+
+雨里有个五岁小孩喊妈妈。小星是第二枚密钥，黎霜藏了五年的女儿。顾寒逼着连夜做亲子鉴定，宋织调包血样，公开结果说孩子不是他的。地下医生老周打开保险柜：真正的报告上，父亲是顾寒。方舟随即把黎霜的脸打上红色感染名单，准备就地销毁。
+
+黎霜没有去求船票。她把掌心贴上废弃地下城的闸门，灯一条一条亮起来，没有船票的人开始有地方活。最深处的冷冻仓里躺着另一张黎霜的脸。宋织给克隆体穿上婚纱，准备顶替她登船。小星只看手腕：没有伤疤的，不是妈妈。
+
+顾寒从执行摘心令，变成抗命。他发现自己童年也被注射过低剂量星核，只是备用零件。文件里那份他签过字的摘心令，被夹在订婚合同里。顾振山临死还要用儿媳的心脏续命，并留下自爆遗嘱：密钥必须永远当燃料。
+
+反应堆要活人。十二席表决把黎霜写成电池。她按了右边那个按钮——不当门，让星核熄灭。宋织体内的半成品星核过载，她选择当人死，而不是当下一艘方舟的引擎。海外残骸上还有人拿着旧船票来换粮食，黎霜把最后一张船票钉在学堂墙上：这张纸以后只用来垫桌脚。
+
+警报不再响。伤疤还在，只是再也不亮。门开着，谁都可以进。没有倒计时的早晨，日子开始了。`
+
+export function worldEndStoryFields() {
+  return {
+    logline: WORLD_END_LOGLINE,
+    world: WORLD_END_WORLD,
+    story: WORLD_END_STORY,
+  }
+}
+
+export function fillWorldEndStory(project: Project): Project {
+  if (project.title.trim() !== '世界末日') return project
+  const sample = worldEndStoryFields()
+  return {
+    ...project,
+    logline: project.logline.trim() || sample.logline,
+    world: project.world.trim() || sample.world,
+    story: project.story.trim() || sample.story,
+  }
+}
+
 export function createWorldEndProject(): Project {
   const characters = [
     createCharacter({
@@ -676,6 +747,7 @@ export function createWorldEndProject(): Project {
     createCharacter({
       name: '宋织',
       role: 'antagonist',
+      villainLayer: 'mid',
       tag: '能源部千金，金船票的主人',
       secret: '偷过黎霜的血，体内是半成品星核；计划用克隆体取代她，登船后灭口所有密钥',
       relationship: '订婚宴上当众抢走黎霜的位置，每集都要伤害她或小星',
@@ -692,6 +764,7 @@ export function createWorldEndProject(): Project {
     createCharacter({
       name: '顾振山',
       role: 'supporting',
+      villainLayer: 'major',
       tag: '顾氏家主，净世计划的按下者',
       secret: '十年前改了陨石轨道；临死还要用黎霜的心脏续命，并留下自爆遗嘱',
       relationship: '顾寒之父，把儿媳写成电池',
@@ -717,6 +790,7 @@ export function createWorldEndProject(): Project {
       nextPreview: beat.nextPreview,
       notes: beat.notes ?? '',
       scenes: [],
+      ...worldEndCraft(index),
     }),
   )
 
@@ -754,13 +828,84 @@ export function createWorldEndProject(): Project {
     ],
   }
 
-  return createProject({
-    title: '世界末日',
-    genre: '末日求生',
-    audience: 'female',
-    targetEpisodes: 80,
-    logline: '末日倒计时开始那天，被悔婚的女人发现：全人类的方舟，只认她的血。',
-    characters,
-    episodes,
-  })
+  episodes[1] = {
+    ...episodes[1],
+    scenes: [
+      createScene({
+        heading: '场景1  外  庄园防空洞门口  夜',
+        action:
+          '顾寒把掌纹按上去，锁红了。黎霜只滴了一滴血，整扇门亮成白线。宋织的人在台阶上举枪，谁也不敢先动。',
+        dialogues: [
+          createDialogue({ character: '顾寒', line: '这扇门不认顾氏。你到底是谁？' }),
+          createDialogue({ character: '黎霜', line: '订婚的时候你没问。现在问，晚了。' }),
+        ],
+      }),
+      createScene({
+        heading: '场景2  内  实验舱通道  夜',
+        action:
+          '舱内全是十年前的培养槽。对讲机刺耳。宋织在画面里下令活捉，无人机红点贴着黎霜后颈扫过。',
+        dialogues: [
+          createDialogue({ character: '宋织', line: '活捉密钥。不要打坏心脏。' }),
+          createDialogue({ character: '黎霜', line: '你们要的不是人，是零件。' }),
+        ],
+      }),
+      createScene({
+        heading: '场景3  内  主控制室  夜',
+        action:
+          '主屏幕刷绿。匹配进度跑到百分之百。黎霜的编号、血型、十年前的照片叠在一起。顾寒在门外砸玻璃，砸不开。',
+        dialogues: [
+          createDialogue({ character: '广播', line: '星核匹配，百分之一百。持有人：黎霜。' }),
+          createDialogue({ character: '顾寒', line: '黎霜，出来。那份船票被人改过。' }),
+        ],
+      }),
+    ],
+  }
+
+  episodes[2] = {
+    ...episodes[2],
+    scenes: [
+      createScene({
+        heading: '场景1  外  方舟新闻发布台  日',
+        action:
+          '末日尘埃还没散。宋织把金船票举到镜头前，媒体的闪光灯比警报还密。黎霜站在警戒线外，衣摆上还是昨夜的灰。',
+        dialogues: [
+          createDialogue({ character: '宋织', line: '顾太太的位置，从一开始就不是黎霜。' }),
+          createDialogue({ character: '黎霜', line: '把船票翻过来。背面印着谁的编号。' }),
+        ],
+      }),
+      createScene({
+        heading: '场景2  内  实验舱档案室  日',
+        action:
+          '黎霜撕开封条。档案夹里是她十年前的实验编号，和金船票背面的钢印一字不差。窗外警报又响了一轮。',
+        dialogues: [
+          createDialogue({ character: '黎霜', line: '他们改的不是名字，是谁配活。' }),
+          createDialogue({ character: '老周', line: '别停在这一页。下一页才是摘心令。' }),
+        ],
+      }),
+      createScene({
+        heading: '场景3  内  顾氏书房  夜',
+        action:
+          '顾振山把密令按在桌上。文件抬头写着：取出活体心脏。顾寒的手机同时震动，同一份命令跳出来。',
+        dialogues: [
+          createDialogue({ character: '顾振山', line: '密钥必须在天亮前回收。必要时，摘心。' }),
+          createDialogue({ character: '顾寒', line: '她是你的儿媳。' }),
+          createDialogue({ character: '顾振山', line: '末日里没有儿媳。只有燃料。' }),
+        ],
+      }),
+    ],
+  }
+
+  return attachStoryboard(
+    createProject({
+      title: '世界末日',
+      genre: '末日求生',
+      audience: 'female',
+      tone: 'burn',
+      endingType: 'he',
+      targetEpisodes: 80,
+      ...worldEndStoryFields(),
+      characters,
+      episodes,
+    }),
+  )
 }

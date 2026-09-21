@@ -1,5 +1,5 @@
-import type { Character, CharacterRole, Project } from '../types'
-import { ROLE_LABELS } from '../types'
+import type { Character, CharacterRole, Project, VillainLayer } from '../types'
+import { ROLE_LABELS, VILLAIN_LAYER_LABELS } from '../types'
 import { createCharacter } from '../model'
 import { AutoTextarea, EmptyHint, Field } from './ui'
 
@@ -49,7 +49,7 @@ export function CharactersView({
       {project.characters.length === 0 ? (
         <EmptyHint
           title="还没有人物"
-          text="至少放一个主角、一个反派、一条爱情线。每人只需标签、秘密、关系三句话。"
+          text="至少放一个主角、一个反派、一条爱情线。反派要分层：小反派、中反派、大反派、隐藏反派。"
         />
       ) : (
         <div className="card-grid">
@@ -64,9 +64,16 @@ export function CharactersView({
                 />
                 <select
                   value={person.role}
-                  onChange={(event) =>
-                    update(person.id, { role: event.target.value as CharacterRole })
-                  }
+                  onChange={(event) => {
+                    const role = event.target.value as CharacterRole
+                    update(person.id, {
+                      role,
+                      villainLayer:
+                        role === 'antagonist' && person.villainLayer === 'none'
+                          ? 'mid'
+                          : person.villainLayer,
+                    })
+                  }}
                 >
                   {ROLES.map((role) => (
                     <option key={role} value={role}>
@@ -75,9 +82,23 @@ export function CharactersView({
                   ))}
                 </select>
               </div>
+              <Field label="反派层级" hint="配角也可以是隐藏反派">
+                <select
+                  value={person.villainLayer}
+                  onChange={(event) =>
+                    update(person.id, { villainLayer: event.target.value as VillainLayer })
+                  }
+                >
+                  {Object.entries(VILLAIN_LAYER_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
               <Field label="人设标签">
                 <input
-                  placeholder="表面是弃妇，实际是失踪继承人"
+                  placeholder="被悔婚的灾民媳妇，方舟唯一活体密钥"
                   value={person.tag}
                   onChange={(event) => update(person.id, { tag: event.target.value })}
                 />
@@ -85,14 +106,14 @@ export function CharactersView({
               <Field label="秘密 / 底牌">
                 <AutoTextarea
                   rows={2}
-                  placeholder="她手里有十年前的监控，和一份真正的亲子鉴定。"
+                  placeholder="十年前被注射星核，门和反应堆只认她的血。"
                   value={person.secret}
                   onChange={(event) => update(person.id, { secret: event.target.value })}
                 />
               </Field>
               <Field label="与主角关系">
                 <input
-                  placeholder="当众悔婚的丈夫 / 假闺蜜"
+                  placeholder="订婚宴上当众悔婚的人 / 要猎杀密钥的人"
                   value={person.relationship}
                   onChange={(event) => update(person.id, { relationship: event.target.value })}
                 />

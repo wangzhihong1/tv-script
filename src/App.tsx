@@ -5,13 +5,15 @@ import { projectCompletion } from './model'
 import { useWorkspace } from './store'
 import { NewProjectModal } from './components/NewProjectModal'
 import { SettingsView } from './components/SettingsView'
+import { StoryView } from './components/StoryView'
 import { CharactersView } from './components/CharactersView'
 import { OutlineView } from './components/OutlineView'
 import { ScriptView } from './components/ScriptView'
 import { CheckView } from './components/CheckView'
+import { BoardView } from './components/BoardView'
 import { ExportView } from './components/ExportView'
 
-const VIEWS: View[] = ['settings', 'characters', 'outline', 'script', 'check', 'export']
+const VIEWS: View[] = ['story', 'settings', 'characters', 'outline', 'script', 'check', 'board', 'export']
 
 export default function App() {
   const {
@@ -21,12 +23,12 @@ export default function App() {
     setActiveId,
     updateActive,
     createBlank,
-    createSample,
     createWorldEnd,
     removeProject,
     duplicateProject,
+    online,
   } = useWorkspace()
-  const [view, setView] = useState<View>('settings')
+  const [view, setView] = useState<View>('story')
   const [creating, setCreating] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -36,7 +38,7 @@ export default function App() {
 
   function openCreated() {
     setCreating(false)
-    setView('settings')
+    setView('story')
     setSidebarOpen(false)
   }
 
@@ -47,7 +49,7 @@ export default function App() {
           <span className="mark">TV</span>
           <div>
             <strong>TvScript</strong>
-            <em>短剧工坊</em>
+            <em>短剧工坊{online ? '' : ' · 离线'}</em>
           </div>
         </div>
         <button
@@ -59,7 +61,7 @@ export default function App() {
         </button>
         <div className="project-list">
           {projects.length === 0 ? (
-            <p className="quiet pad">还没有剧目。先建一个，或载入示例。</p>
+            <p className="quiet pad">还没有剧目。先写故事，或载入《世界末日》。</p>
           ) : (
             projects.map((project) => (
               <button
@@ -135,6 +137,7 @@ export default function App() {
               ))}
             </nav>
             <main className="main">
+              {view === 'story' ? <StoryView project={active} onChange={apply} /> : null}
               {view === 'settings' ? (
                 <SettingsView project={active} onChange={apply} />
               ) : null}
@@ -150,40 +153,33 @@ export default function App() {
               {view === 'check' ? (
                 <CheckView project={active} onGoto={setView} />
               ) : null}
+              {view === 'board' ? (
+                <BoardView project={active} onChange={apply} online={online} />
+              ) : null}
               {view === 'export' ? <ExportView project={active} /> : null}
             </main>
           </>
         ) : (
           <main className="welcome">
-            <p className="eyebrow">短剧不是长剧的缩写</p>
+            <p className="eyebrow">先故事，再剧本，再分镜</p>
             <h1>
               三秒抓住人
               <br />
               每集卖掉下一集
             </h1>
             <p>
-              在这里立卖点、写人物底牌、铺 80 集钩子，再把场景和对白写成能拍的稿。
-              数据保存在本机浏览器，不会上传。
+              以《世界末日》为例：先立故事和人物，再写成场次对白，最后拆成 MiniMax H3 提示词。
+              成片工作流后面再接。剧本存在本机；连上 Python 后端后会一起落盘。
             </p>
             <div className="welcome-actions">
               <button type="button" className="btn gold" onClick={() => {
                 createWorldEnd()
-                setView('outline')
+                setView('story')
               }}>
-                创建《世界末日》
+                打开《世界末日》
               </button>
               <button type="button" className="btn ghost" onClick={() => setCreating(true)}>
                 新建剧目
-              </button>
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => {
-                  createSample()
-                  setView('outline')
-                }}
-              >
-                打开示例《被弃千金》
               </button>
             </div>
           </main>
@@ -206,15 +202,9 @@ export default function App() {
             createBlank(partial)
             openCreated()
           }}
-          onSample={() => {
-            createSample()
-            setView('outline')
-            setCreating(false)
-            setSidebarOpen(false)
-          }}
           onWorldEnd={() => {
             createWorldEnd()
-            setView('outline')
+            setView('story')
             setCreating(false)
             setSidebarOpen(false)
           }}

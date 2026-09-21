@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "python -m uvicorn server.app:app --reload --port 8787",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

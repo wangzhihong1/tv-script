@@ -505,6 +505,52 @@ h3 {
   font-style: normal;
 }
 
+.ep-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ep-tags em {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.ep-tags .tag-key {
+  color: var(--gold-2);
+  border-color: rgba(196, 163, 90, 0.45);
+}
+
+.ep-tags .tag-pay {
+  color: #e2b36a;
+  border-color: rgba(226, 179, 106, 0.5);
+}
+
+.ep-card.marker-key {
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.ep-card.marker-paywall {
+  box-shadow: inset 3px 0 0 #d4894a;
+}
+
+.check-group {
+  margin-top: 28px;
+}
+
+.check-group-head h2 {
+  margin: 4px 0 0;
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.check-group .check-list {
+  margin-top: 12px;
+}
+
 .dots {
   display: flex;
   gap: 4px;
@@ -597,6 +643,49 @@ h3 {
   gap: 14px;
 }
 
+.board-main {
+  min-width: 0;
+}
+
+.board-error {
+  color: var(--danger);
+  margin: 0 0 16px;
+}
+
+.clip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.clip-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.clip-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.clip-top strong {
+  font-family: var(--serif);
+}
+
+.h3-prompt {
+  min-height: 240px;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
 .beat-notes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -672,6 +761,33 @@ h3 {
 .paper-empty {
   color: #8a7350;
   line-height: 1.8;
+}
+
+.story-paper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.story-paper .field-label {
+  color: #8a7350;
+}
+
+.story-paper .story-logline {
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 1.5;
+  min-height: 64px;
+}
+
+.story-paper .story-world {
+  min-height: 140px;
+}
+
+.story-paper .story-body {
+  min-height: 420px;
+  font-size: 16px;
+  line-height: 1.9;
 }
 
 .lead {
